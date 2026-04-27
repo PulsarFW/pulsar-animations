@@ -1,0 +1,48 @@
+name: Create release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install zip
+        run: sudo apt install zip
+
+      - name: Get latest code
+        uses: actions/checkout@v4
+
+      - name: Bundle files
+        run: |
+          mkdir -p ./temp/pulsar-animations
+          cp ./{README.md,fxmanifest.lua} ./temp/pulsar-animations
+          cp -r ./{client,server,shared,config} ./temp/pulsar-animations
+          cd ./temp && zip -r ../pulsar-animations.zip ./pulsar-animations
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "PULSAR-ANIMATIONS ${{ github.ref_name }}"
+          body: |
+            ![Pulsar Framework](https://r2.fivemanage.com/GPYOH8Hq4GPyAY7czrgLe/pulsarbanner.png)
+
+            ## PULSAR-ANIMATIONS ${{ github.ref_name }}
+
+            Emotes, shared animations, prop handling, and ped features for Pulsar Framework.
+
+            ### Installation
+            1. Download `pulsar-animations.zip` below
+            2. Extract into your server's `resources` folder
+            3. Add `ensure pulsar-animations` to your `server.cfg`
+
+            ---
+            ![Pulsar Framework](https://img.shields.io/badge/Pulsar-Framework-7c3aed?style=flat-square)
+            ![Built for FiveM](https://img.shields.io/badge/Built_for-FiveM-F40552?style=flat-square)
+          files: pulsar-animations.zip
+          prerelease: false
