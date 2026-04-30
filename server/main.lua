@@ -56,10 +56,7 @@ function RegisterChatCommands()
 		if
 			not Player(source).state.isCuffed
 			and not Player(source).state.isDead
-			and (function()
-				local phoneItem = exports.ox_inventory:getUtilitySlotItem(source, 8)
-				return phoneItem ~= nil and phoneItem.metadata.durability > 0
-			end)()
+			and exports.ox_inventory:GetItemCount(source, 'phone') > 0
 		then
 			TriggerClientEvent("Animations:Client:Selfie", source)
 		else
@@ -150,7 +147,7 @@ RegisterNetEvent("Animations:Server:UploadSelfie", function(data, callback)
 			formField = "image"
 		},
 		function(response)
-			local image = json.decode(response)
+			local image = type(response) == "table" and response or json.decode(response)
 			callback(json.encode({ url = image.url }))
 		end,
 		"blob"
