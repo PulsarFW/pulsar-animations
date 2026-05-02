@@ -12,18 +12,11 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Install zip
-        run: sudo apt install zip
-
       - name: Get latest code
         uses: actions/checkout@v4
 
       - name: Bundle files
-        run: |
-          mkdir -p ./temp/pulsar-animations
-          cp ./{README.md,fxmanifest.lua} ./temp/pulsar-animations
-          cp -r ./{client,server,shared,config} ./temp/pulsar-animations
-          cd ./temp && zip -r ../pulsar-animations.zip ./pulsar-animations
+        run: zip -r pulsar-animations.zip . -x '*/.github/*' -x '*/node_modules/*'
 
       - name: Create release
         uses: softprops/action-gh-release@v2
