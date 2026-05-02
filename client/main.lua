@@ -28,9 +28,6 @@ AddEventHandler('onClientResourceStart', function(resource)
 			exports['pulsar-animations']:OpenWalksMenu()
 		end)
 
-		exports["pulsar-core"]:RegisterClientCallback("Selfie:Client:UploadPhoto", function(data, cb)
-			TriggerServerEvent("Animations:Server:UploadSelfie", data, cb)
-		end)
 	end
 end)
 
