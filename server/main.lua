@@ -132,102 +132,38 @@ end)
 local pendingSend = false
 
 RegisterServerEvent("Selfie:CaptureSelfie", function()
-	local src = source
-	local char = exports['pulsar-characters']:FetchCharacterSource(src)
-	if not char then return end
+  local src = source
+  local char = exports['pulsar-characters']:FetchCharacterSource(src)
+  if not char then return end
 
-	if pendingSend then
-		exports['pulsar-hud']:Notification(src, "warning", "Please wait while current photo is uploading", 2000)
-		return
-	end
+  if pendingSend then
+    exports['pulsar-hud']:Notification(src, "warning", "Please wait while current photo is uploading", 2000)
+    return
+  end
 
-	pendingSend = true
-	exports['pulsar-hud']:Notification(src, "info", "Prepping Photo Upload", 2000)
-
-	exports["screencapture"]:remoteUpload(
-		src,
-		tostring(GetConvar("phone_selfie_webhook", "")),
-		{
-			encoding = "webp",
-			quality = 0.8,
-			headers = { Authorization = tostring(GetConvar("phone_selfie_token", "")) },
-			formField = "image"
-		},
-		function(response)
-			local image = type(response) == "table" and response or json.decode(response)
-			local retval = exports['pulsar-phone']:PhotosCreate(src, { image_url = image.url })
-			pendingSend = false
-			TriggerClientEvent("Selfie:DoCloseSelfie", src)
-			if retval then
-				exports['pulsar-hud']:Notification(src, "success", "Photo uploaded successfully!", 2000)
-			else
-				exports['pulsar-hud']:Notification(src, "error", "Error uploading photo!", 2000)
-			end
-		end,
-		"blob"
-	)
-end)
-RegisterNetEvent("Animations:Server:UploadSelfie", function(data, callback)
-  local source = source
-  local apiUrl = data.api
-  local token = data.token
+  pendingSend = true
+  exports['pulsar-hud']:Notification(src, "info", "Prepping Photo Upload", 2000)
 
   exports["screencapture"]:remoteUpload(
-    source,
-    apiUrl,
+    src,
+    tostring(GetConvar("phone_selfie_webhook", "")),
     {
       encoding = "webp",
       quality = 0.8,
-      headers = {
-        Authorization = token
-      },
+      headers = { Authorization = tostring(GetConvar("phone_selfie_token", "")) },
       formField = "image"
     },
     function(response)
       local image = type(response) == "table" and response or json.decode(response)
-      callback(json.encode({ url = image.url }))
+      local retval = exports['pulsar-phone']:PhotosCreate(src, { image_url = image.url })
+      pendingSend = false
+      TriggerClientEvent("Selfie:DoCloseSelfie", src)
+      if retval then
+        exports['pulsar-hud']:Notification(src, "success", "Photo uploaded successfully!", 2000)
+      else
+        exports['pulsar-hud']:Notification(src, "error", "Error uploading photo!", 2000)
+      end
     end,
     "blob"
   )
-end)
-
-RegisterServerEvent("Selfie:CaptureSelfie", function()
-  local src = source
-  local char = exports['pulsar-characters']:FetchCharacterSource(src)
-  if char then
-    if pendingSend then
-      exports['pulsar-hud']:Notification(src, "warning",
-        "Please wait while current photo is uploading", 2000)
-      return
-    end
-    pendingSend = true
-    exports['pulsar-hud']:Notification(src, "info", "Prepping Photo Upload", 2000)
-
-    exports["pulsar-core"]:ClientCallback(src, "Selfie:Client:UploadPhoto", {
-      api = tostring(GetConvar("phone_selfie_webhook", "")),
-      token = tostring(GetConvar("phone_selfie_token", "")),
-    }, function(ret)
-      if ret then
-        local _data = {
-          image_url = json.decode(ret).url,
-        }
-        local retval = exports['pulsar-phone']:PhotosCreate(src, _data)
-        if retval then
-          pendingSend = false
-          TriggerClientEvent("Selfie:DoCloseSelfie", src)
-          exports['pulsar-hud']:Notification(src, "success", "Photo uploaded successfully!",
-            2000)
-        else
-          pendingSend = false
-          TriggerClientEvent("Selfie:DoCloseSelfie", src)
-          exports['pulsar-hud']:Notification(src, "error", "Error uploading photo!", 2000)
-        end
-      else
-        pendingSend = false
-        TriggerClientEvent("Selfie:DoCloseSelfie", src)
-        exports['pulsar-hud']:Notification(src, "error", "Error uploading photo!", 2000)
-        print("^1ERROR: " .. data)
-      end
-    end)
-  end
 end)
