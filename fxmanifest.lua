@@ -2,7 +2,7 @@ fx_version("cerulean")
 games({ "gta5" })
 lua54("yes")
 
-version '1.0.1'
+version '1.0.2'
 repository 'https://www.github.com/PularFW/pulsar-animations'
 
 client_script("@pulsar-core/exports/cl_error.lua")
