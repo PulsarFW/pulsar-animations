@@ -144,9 +144,17 @@ RegisterServerEvent("Selfie:CaptureSelfie", function()
   pendingSend = true
   exports['pulsar-hud']:Notification(src, "info", "Prepping Photo Upload", 2000)
 
+  local webhookUrl = tostring(GetConvar("phone_selfie_webhook", ""))
+  if webhookUrl == "" then
+    pendingSend = false
+    TriggerClientEvent("Selfie:DoCloseSelfie", src)
+    exports['pulsar-hud']:Notification(src, "error", "Selfie upload is not configured.", 2000)
+    return
+  end
+
   exports["screencapture"]:remoteUpload(
     src,
-    tostring(GetConvar("phone_selfie_webhook", "")),
+    webhookUrl,
     {
       encoding = "webp",
       quality = 0.8,
@@ -154,8 +162,18 @@ RegisterServerEvent("Selfie:CaptureSelfie", function()
       formField = "image"
     },
     function(response)
-      local image = type(response) == "table" and response or json.decode(response)
-      local retval = exports['pulsar-phone']:PhotosCreate(src, { image_url = image.url })
+      local image = type(response) == "table" and response or (type(response) == "string" and json.decode(response) or nil)
+      local imageUrl = image and image.url
+
+      if not imageUrl then
+        print("^1[pulsar-animations] Selfie upload failed. Response: " .. json.encode(response) .. "^0")
+        pendingSend = false
+        TriggerClientEvent("Selfie:DoCloseSelfie", src)
+        exports['pulsar-hud']:Notification(src, "error", "Error uploading photo!", 2000)
+        return
+      end
+
+      local retval = exports['pulsar-phone']:PhotosCreate(src, { image_url = imageUrl })
       pendingSend = false
       TriggerClientEvent("Selfie:DoCloseSelfie", src)
       if retval then
